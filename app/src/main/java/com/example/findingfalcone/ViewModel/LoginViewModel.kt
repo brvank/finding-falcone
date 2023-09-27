@@ -16,6 +16,7 @@ import java.io.IOException
 class LoginViewModel : ViewModel() {
 
     var name: String = ""
+    var token: String = ""
     var networkRepo: NetworkRepo = NetworkRepo()
 
     private var loading: MutableLiveData<Boolean> = MutableLiveData<Boolean>(false)
@@ -25,8 +26,14 @@ class LoginViewModel : ViewModel() {
         loading.observe(owner, observer)
     }
 
+    //for main thread
     fun setLoading(state: Boolean){
         loading.value = state
+    }
+
+    //for background thread
+    fun postLoading(state: Boolean){
+        loading.postValue(state)
     }
 
     fun getLoading() : Boolean{
@@ -37,8 +44,14 @@ class LoginViewModel : ViewModel() {
         error.observe(owner, observer)
     }
 
+    //for main thread
     fun setError(state: String){
         error.value = state
+    }
+
+    //for background thread
+    fun postError(state: String){
+        error.postValue(state)
     }
 
     fun getError(): String{
@@ -51,12 +64,13 @@ class LoginViewModel : ViewModel() {
         error.postValue("")
         networkRepo.post(Api.generateToken, "{}", object: Callback{
             override fun onFailure(call: Call, e: IOException) {
-                loading.postValue(false)
-                error.postValue("Something went wrong! Please Retry!")
+                postLoading(false)
+                postError("Something went wrong! Please Retry!")
             }
 
             override fun onResponse(call: Call, response: Response) {
-                loading.postValue(false)
+                postLoading(false)
+                token = JSONObject(response.body!!.string()).getString("token")
                 runnable.run()
             }
         })
