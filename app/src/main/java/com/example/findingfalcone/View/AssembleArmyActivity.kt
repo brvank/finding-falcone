@@ -5,12 +5,13 @@ import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.findingfalcone.R
+import com.example.findingfalcone.Utility.FragmentFormController
+import com.example.findingfalcone.View.Fragments.DestinationVehicleSelectionFragment
 import com.example.findingfalcone.View.Fragments.LoadingDialogFragment
 import com.example.findingfalcone.ViewModel.AssembleArmyViewModel
 import com.example.findingfalcone.databinding.ActivityAssembleArmyBinding
 
-class AssembleArmyActivity : AppCompatActivity() {
+class AssembleArmyActivity : AppCompatActivity(), FragmentFormController {
 
     lateinit var binding: ActivityAssembleArmyBinding
     lateinit var assembleArmyViewModel: AssembleArmyViewModel
@@ -23,6 +24,19 @@ class AssembleArmyActivity : AppCompatActivity() {
 
         assembleArmyViewModel = ViewModelProvider(this@AssembleArmyActivity).get(AssembleArmyViewModel::class.java)
 
+        setupData()
+    }
+
+    private fun setupViews(){
+        assembleArmyViewModel.formId.observe(this@AssembleArmyActivity, Observer {
+            supportFragmentManager
+                .beginTransaction()
+                .replace(binding.fragmentContainer.id, DestinationVehicleSelectionFragment())
+                .commit()
+        })
+    }
+
+    private fun setupData(){
         assembleArmyViewModel.observeLoading(this@AssembleArmyActivity, Observer {
             if( it!= null){
                 if(loadingDialogFragment != null){
@@ -46,12 +60,19 @@ class AssembleArmyActivity : AppCompatActivity() {
             }
         })
 
-        assembleArmyViewModel.getPlanets {
+        assembleArmyViewModel.fetchPlanets {
             runOnUiThread {
-                assembleArmyViewModel.getVehicles(Runnable {
-
+                assembleArmyViewModel.fetchVehicles(Runnable {
+                    runOnUiThread {
+                        setupViews()
+                    }
                 })
             }
+        }
+
+        for (i in 1..4){
+            assembleArmyViewModel.vehicleHashMap[i] = ""
+            assembleArmyViewModel.planetHashMap[i] = ""
         }
     }
 
@@ -60,5 +81,25 @@ class AssembleArmyActivity : AppCompatActivity() {
         if(loadingDialogFragment != null){
             loadingDialogFragment?.dismiss()
         }
+    }
+
+    override fun execute(formStatus: FragmentFormController.FormStatus) {
+        when(formStatus){
+            FragmentFormController.FormStatus.PREV -> {
+                assembleArmyViewModel.formId.value = assembleArmyViewModel.formId.value!! - 1
+            }
+
+            FragmentFormController.FormStatus.NEXT -> {
+                assembleArmyViewModel.formId.value = assembleArmyViewModel.formId.value!! + 1
+            }
+
+            FragmentFormController.FormStatus.DONE -> {
+                findFalcone()
+            }
+        }
+    }
+
+    private fun findFalcone(){
+
     }
 }
