@@ -4,22 +4,16 @@ import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
-import androidx.core.view.get
-import androidx.core.view.size
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
 import com.example.findingfalcone.Model.Planet
-import com.example.findingfalcone.R
 import com.example.findingfalcone.Utility.FragmentFormController
 import com.example.findingfalcone.Utility.PlanetSelector
 import com.example.findingfalcone.ViewModel.AssembleArmyViewModel
 import com.example.findingfalcone.databinding.FragmentDestinationVehicleSelectionBinding
-import java.lang.Exception
 
 class DestinationVehicleSelectionFragment : Fragment() {
 
@@ -89,6 +83,7 @@ class DestinationVehicleSelectionFragment : Fragment() {
                     !it.isLetter()
                 }
                 assembleArmyViewModel.vehicleHashMap[assembleArmyViewModel.formId.value!!] = name.toString()
+                Log.i("app log", "binding -> $name")
                 checkForVehicleSelection(false)
             }
         }
@@ -113,6 +108,10 @@ class DestinationVehicleSelectionFragment : Fragment() {
             binding.tvSelectDestinations.text = planet
 
             checkForVehicleSelection(reset)
+        }else{
+            if(!reset) {
+                checkForVehicleSelection(reset)
+            }
         }
     }
 
@@ -153,7 +152,7 @@ class DestinationVehicleSelectionFragment : Fragment() {
                 rbVehicle.isChecked = true
             }
 
-            if((count != null && count <= 0) || (v.maxDistance < planet!!.distance)){
+            if(((count != null) && (count <= 0)) || (v.maxDistance < planet!!.distance)){
                 rbVehicle.isEnabled = false
             }
 
@@ -162,25 +161,28 @@ class DestinationVehicleSelectionFragment : Fragment() {
         }
 
         var timeTaken = 0
+        binding.tvTimeTaken.text = "Time taken: $timeTaken"
         for(j in 1..4){
-            val name = assembleArmyViewModel.vehicleHashMap[j]
-            if(!name.isNullOrEmpty()) {
-                if(!vehicle.isNullOrEmpty()) {
-                    val p = assembleArmyViewModel.getPlanets().find {
-                        it.name == name
+            val p = assembleArmyViewModel.planetHashMap[j]
+            val v = assembleArmyViewModel.vehicleHashMap[j]
+            if(!p.isNullOrEmpty()) {
+                if(!v.isNullOrEmpty()) {
+                    val pl = assembleArmyViewModel.getPlanets().find {
+                        it.name == p
                     }
 
-                    val v = assembleArmyViewModel.getVehicles().find{
-                        it.name == vehicle
+                    val ve = assembleArmyViewModel.getVehicles().find{
+                        it.name == v
                     }
 
-                    if(p != null && v != null){
-                        timeTaken += p.distance / v.speed
+                    if(pl != null && ve != null){
+                        timeTaken += pl.distance / ve.speed
                     }
                 }
+
+                binding.tvTimeTaken.text = "Time taken: $timeTaken"
             }
         }
 
-        binding.tvTimeTaken.text = "Time taken: $timeTaken"
     }
 }
